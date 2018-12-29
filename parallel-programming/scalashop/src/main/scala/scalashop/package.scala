@@ -39,21 +39,21 @@ package object scalashop {
 
   /** Computes the blurred RGBA value of a single pixel of the input image. */
   def boxBlurKernel(src: Img, x: Int, y: Int, radius: Int): RGBA = {
-    if (radius == 0) src(x,y) else {
-      val startX = clamp(x - radius, 0, src.width)
-      val startY = clamp(y - radius, 0, src.height)
-      val endX = clamp(x + radius, 0, src.width)
-      val endY = clamp(y + radius, 0 , src.height)
+    if (radius == 0) src(x, y) else {
+      val startX = clamp(x - radius, 0, src.width - 1)
+      val startY = clamp(y - radius, 0, src.height - 1)
+      val endX = clamp(x + radius, 0, src.width - 1)
+      val endY = clamp(y + radius, 0, src.height - 1)
       val denominator = (endX - startX + 1) * (endY - startY + 1)
 
       val channels = for {
         x <- startX to endX
         y <- startY to endY
-        pixel = src(x,y)
+        pixel = src(x, y)
       } yield Map("r" -> red(pixel), "g" -> green(pixel), "b" -> blue(pixel), "a" -> alpha(pixel))
 
       val rgbaValues = channels.reduce[Map[String, Int]]((a, b) =>
-        for (((key, v1),(_, v2)) <- a.zip(b)) yield (key, v1 + v2)).mapValues(_ / denominator)
+        for (((key, v1), (_, v2)) <- a.zip(b)) yield (key, v1 + v2)).mapValues(_ / denominator)
 
       rgba(rgbaValues("r"), rgbaValues("g"), rgbaValues("b"), rgbaValues("a"))
     }
