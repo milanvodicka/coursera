@@ -46,26 +46,16 @@ package object scalashop {
       val endY = clamp(y + radius, 0 , src.height)
       val denominator = (endX - startX + 1) * (endY - startY + 1)
 
-      var pX = startX
-      var pY = startY
-      var r = 0
-      var g = 0
-      var b = 0
-      var a = 0
+      val channels = for {
+        x <- startX to endX
+        y <- startY to endY
+        pixel = src(x,y)
+      } yield Map("r" -> red(pixel), "g" -> green(pixel), "b" -> blue(pixel), "a" -> alpha(pixel))
 
-      while (pX <= endX) {
-        while (pY <= endY) {
-          val pixel = src(pX, pY)
-          r = r + red(pixel)
-          g = g + green(pixel)
-          b = b + blue(pixel)
-          a = a + alpha(pixel)
-          pY = pY + 1
-        }
-        pX = pX + 1
-        pY = startY
-      }
-      rgba(r / denominator, g / denominator, b / denominator, a / denominator)
+      val rgbaValues = channels.reduce[Map[String, Int]]((a, b) =>
+        for (((key, v1),(_, v2)) <- a.zip(b)) yield (key, v1 + v2)).mapValues(_ / denominator)
+
+      rgba(rgbaValues("r"), rgbaValues("g"), rgbaValues("b"), rgbaValues("a"))
     }
   }
 
